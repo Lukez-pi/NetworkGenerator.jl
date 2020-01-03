@@ -111,7 +111,7 @@ function randomize_rxns(species::Vector{String}, geneSpecies::Vector{String}, nR
     return merge(addition_specs, rxn_specs)
 end
 
-function generate_model(rxn_specs::Dict{})
+function generate_model(rxn_specs::Dict{}, mass_action::Bool)
     variables = Vector{String}()
     add_rxns = []
 
@@ -123,21 +123,33 @@ function generate_model(rxn_specs::Dict{})
         prds = spec["prds"]
         cat = spec["cat"]
 
-        rl, vars = generate_rate_law(rcts, prds, cat, rxn_mech, rxn_counter)
+        rl, vars = generate_rate_law(rcts, prds, cat, rxn_mech, rxn_counter, mass_action)
         append!(variables, vars)
         add_rxn = [rxn_num, rcts, prds, rl]
-        println(typeof(add_rxn))
         push!(add_rxns, add_rxn)
         rxn_counter += 1
     end
-    println("final: ", variables)
     return [add_rxns, variables]
 end
 
-function generate_rate_law(rcts, prds, cat, rxn_mech::String, rxn_counter::Int64)
+function generate_rate_law(rcts, prds, cat, rxn_mech::String, rxn_counter::Int64, mass_action::Bool)
     add_rxn = String[]
     if rxn_mech == "UNIUNI"
-        rate_law, variables = michealis_menten_rate_law(cat[1], rcts[1], prds[1], rxn_counter)
+        if mass_action == false
+            rate_law, variables = michealis_menten_rate_law(cat[1], rcts[1], prds[1], rxn_counter)
+        else
+            rct = rcts[1]
+            prd = prds[1]
+            cat = cat[1]
+            intermediate = "inter_$(cat)_$(rct)"
+            for_rate_const = "k1_J$rxn_counter"
+            rev_rate_const = "k_1_J$rxn_counter"
+            cat_rate_const = "kcat_J$rxn_counter"
+            rate_law_1 = "$for_rate_const * $rct * $cat - $rev_rate_const * $intermediate"
+            rate_law_2 = "$cat_rate_const * $intermediate"
+            rate_law = "$intermediate; $rate_law_1; $rate_law_2"
+            variables = [for_rate_const, rev_rate_const, cat_rate_const]
+        end
     else
         variables = String[]
         forward_rate_const = "k0_J$rxn_counter"
@@ -258,14 +270,3 @@ function replace_rxn(rxn_specs::Dict{}, mutate_num::Int64, species::Vector{Strin
     return [mutated_specs, delete_rxns]
 end
 end
-# function setBoundary(rr::Ptr{Nothing}, sid::String, boundaryCondition::Bool, forceRegen::Bool)
-#   status = false
-#   if forceRegen == true
-#     status = ccall(dlsym(rrlib, :setBoundary), cdecl, Bool, (Ptr{Nothing}, Ptr{UInt8}, Bool), rr, sid, boundaryCondition)
-#   else
-#     status = ccall(dlsym(rrlib, :setBoundary), cdecl, Bool, (Ptr{Nothing}, Ptr{UInt8}, Bool), rr, pid, boundaryCondition)
-#   end
-#   if status == false
-#     error(getLastError())
-#   end
-# end

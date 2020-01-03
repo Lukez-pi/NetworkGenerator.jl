@@ -4,25 +4,42 @@ using .NetworkGenerator
 
 @testset "rate_law" begin
     # UNIUNI
-    rl_UU, var_UU = NetworkGenerator.generate_rate_law(["S1"], ["S3"], ["E5"], "UNIUNI", 2)
+    rl_UU, var_UU = NetworkGenerator.generate_rate_law(["S1"], ["S3"], ["E5"], "UNIUNI", 2, false)
     @test rl_UU == "(kcat_J2 * E5 * S1) / (S1 + Km_J2)"
     @test Set(var_UU) == Set(["kcat_J2", "Km_J2"])
 
+    rl_UU, var_UU = NetworkGenerator.generate_rate_law(["S1"], ["S3"], ["E5"], "UNIUNI", 2, true)
+    temp = split(rl_UU, "; ")
+    @test temp[1] == "inter_E5-S1"
+    @test temp[2] == "k1_J2 * S1 - k-1_J2 * $(temp[1])"
+    @test temp[3] == "kcat_J2 * $(temp[1])"
+    @test Set(var_UU) == Set(["k1_J2", "k-1_J2", "kcat_J2"])
+
     #UNIBI
-    rl_UB, var_UB = NetworkGenerator.generate_rate_law(["P3"], ["K51", "5000"], [], "BIUNI", 92)
+    rl_UB, var_UB = NetworkGenerator.generate_rate_law(["P3"], ["K51", "5000"], [], "BIUNI", 92, false)
+    @test rl_UB == "k0_J92 * P3 - k1_J92 * K51 * 5000"
+    @test Set(var_UB) == Set(["k0_J92", "k1_J92"])
+
+    rl_UB, var_UB = NetworkGenerator.generate_rate_law(["P3"], ["K51", "5000"], [], "BIUNI", 92, true)
     @test rl_UB == "k0_J92 * P3 - k1_J92 * K51 * 5000"
     @test Set(var_UB) == Set(["k0_J92", "k1_J92"])
 
     # BIUNI
-    rl_BU, var_BU = NetworkGenerator.generate_rate_law(["S1", "S2"], ["S3"], [], "BIUNI", 2)
+    rl_BU, var_BU = NetworkGenerator.generate_rate_law(["S1", "S2"], ["S3"], [], "BIUNI", 2, false)
     @test rl_BU == "k0_J2 * S1 * S2 - k1_J2 * S3"
     @test Set(var_BU) == Set(["k0_J2", "k1_J2"])
 
+    rl_BU, var_BU = NetworkGenerator.generate_rate_law(["S1", "S2"], ["S3"], [], "BIUNI", 2, true)
+    @test rl_BU == "k0_J2 * S1 * S2 - k1_J2 * S3"
+    @test Set(var_BU) == Set(["k0_J2", "k1_J2"])
     # BIBI
-    rl_BB, var_BB = NetworkGenerator.generate_rate_law(["S7", "M2"], ["D3", "6"], [], "BIBI", 7)
+    rl_BB, var_BB = NetworkGenerator.generate_rate_law(["S7", "M2"], ["D3", "6"], [], "BIBI", 7, false)
     @test rl_BB == "k0_J7 * S7 * M2 - k1_J7 * D3 * 6"
     @test Set(var_BB) == Set(["k0_J7", "k1_J7"])
 
+    rl_BB, var_BB = NetworkGenerator.generate_rate_law(["S7", "M2"], ["D3", "6"], [], "BIBI", 7, true)
+    @test rl_BB == "k0_J7 * S7 * M2 - k1_J7 * D3 * 6"
+    @test Set(var_BB) == Set(["k0_J7", "k1_J7"])
 
     rl_MM, var_MM = NetworkGenerator.michealis_menten_rate_law("E1", "S2", "P3", 4)
     @test rl_MM == "(kcat_J4 * E1 * S2) / (S2 + Km_J4)"
@@ -150,20 +167,5 @@ end
         end
         @test length(setdiff(new_rxn_keys, old_rxn_keys)) == length(setdiff(old_rxn_keys, new_rxn_keys))
         @test length(setdiff(new_rxn_keys, old_rxn_keys)) == mutate_num
-        # if length(setdiff(new_rxn_keys, old_rxn_keys)) != mutate_num
-        #     @test length(setdiff(old_rxn_keys, new_rxn_keys)) == mutate_num
-        #     println("delete rxns: ", keys(delete_rxns))
-        #     println("intersect: ", intersect(old_rxn_keys, new_rxn_keys))
-        #     for key in keys(delete_rxns)
-        #         if key in intersect(old_rxn_keys, new_rxn_keys)
-        #             println("this is the key: ", key)
-        #         end
-        #     end
-        #     println()
-        #     println()
-        #     #println("rxn_specs: ")
-        #     #NetworkGenerator.print_dict(rxn_specs)
-        #     #println("")
-        # end
     end
 end

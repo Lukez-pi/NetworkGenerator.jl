@@ -325,12 +325,14 @@ end
 
 function getFloatingSpeciesIds(rr)
   data = ccall(dlsym(rrlib, :getFloatingSpeciesIds), cdecl, Ptr{RRStringArray}, (Ptr{Nothing},), rr)
-  num_species = getNumberOfFloatingSpecies(rr)
-  species = Array{String}(undef, num_species)
+  species = String[]
   try
+    num_species = getNumberOfFloatingSpecies(rr)
     for i = 1:num_species
-      species[i] = getStringElement(data, i - 1)
+      push!(species, getStringElement(data, i - 1))
     end
+  catch e
+    throw(e)
   finally
     freeStringArray(data)
   end
@@ -769,7 +771,7 @@ function addCompartment(rr, cid::String, initVolume::Float64, regen::Bool)
   end
 end
 
-function addReaction(rr::Ptr{Nothing}, rid::String, reactants::Array{String}, products::Array{String}, kineticLaw::String, regen::Bool)
+function addReaction(rr::Ptr{Nothing}, rid::String, reactants::Array{String}, products::Vector{String}, kineticLaw::String, regen::Bool)
   numReactants = length(reactants)
   numProducts = length(products)
   status = 0
