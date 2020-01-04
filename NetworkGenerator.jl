@@ -141,7 +141,7 @@ function generate_rate_law(rcts, prds, cat, rxn_mech::String, rxn_counter::Int64
             rct = rcts[1]
             prd = prds[1]
             cat = cat[1]
-            intermediate = "inter_$(cat)_$(rct)"
+            intermediate = "inter_$(cat)_$(rct)_$(prd)"
             for_rate_const = "k1_J$rxn_counter"
             rev_rate_const = "k_1_J$rxn_counter"
             cat_rate_const = "kcat_J$rxn_counter"

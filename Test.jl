@@ -10,10 +10,10 @@ using .NetworkGenerator
 
     rl_UU, var_UU = NetworkGenerator.generate_rate_law(["S1"], ["S3"], ["E5"], "UNIUNI", 2, true)
     temp = split(rl_UU, "; ")
-    @test temp[1] == "inter_E5-S1"
-    @test temp[2] == "k1_J2 * S1 - k-1_J2 * $(temp[1])"
+    @test temp[1] == "inter_E5_S1_S3"
+    @test temp[2] == "k1_J2 * S1 * E5 - k_1_J2 * $(temp[1])"
     @test temp[3] == "kcat_J2 * $(temp[1])"
-    @test Set(var_UU) == Set(["k1_J2", "k-1_J2", "kcat_J2"])
+    @test Set(var_UU) == Set(["k1_J2", "k_1_J2", "kcat_J2"])
 
     #UNIBI
     rl_UB, var_UB = NetworkGenerator.generate_rate_law(["P3"], ["K51", "5000"], [], "BIUNI", 92, false)
@@ -78,6 +78,7 @@ end
             cat = rxn["cat"]
             rcts = rxn["rcts"]
             prds = rxn["prds"]
+            rxn_mech = rxn["rxn_mech"]
             for rct in rcts
                 push!(species_present, rct)
             end
@@ -92,6 +93,22 @@ end
             reverse_key = "$(split_key[2]), $(split_key[1])"
             if haskey(rxn_specs, reverse_key)
                 @test rxn_specs[reverse_key]["cat"] != cat[1]
+            end
+
+            if rxn_mech == "UNIUNI"
+                @test length(rcts) == 1 && length(prds) == 1
+                @test length(cat) == 1
+            elseif rxn_mech == "BIUNI"
+                @test length(rcts) == 2 && length(prds) == 1
+                @test length(cat) == 0
+            elseif rxn_mech == "UNIBI"
+                @test length(rcts) == 1 && length(prds) == 2
+                @test length(cat) == 0
+            elseif rxn_mech == "BIBI"
+                @test length(rcts) == 2 && length(prds) == 2
+                @test length(cat) == 0
+            else
+                error("invalid reaction mechanism type")
             end
         end
         @test length(species_present) == n_species
@@ -118,6 +135,7 @@ end
             cat = rxn["cat"]
             rcts = rxn["rcts"]
             prds = rxn["prds"]
+            rxn_mech = rxn["rxn_mech"]
             for rct in rcts
                 push!(species_present, rct)
             end
@@ -134,18 +152,28 @@ end
             end
 
             if length(mutate_specs[key]["cat"]) == 0
-                if in(key, new_rxn_keys)
-                    println("bad key: ", key)
-                end
-                 push!(new_rxn_keys, key)
-                 new_counter += 1
+                push!(new_rxn_keys, key)
+                new_counter += 1
             else
                 new_key = string(key, ", ", mutate_specs[key]["cat"][1])
-                if in(new_key, new_rxn_keys)
-                    println("bad key: ", new_key)
-                end
                 push!(new_rxn_keys, new_key)
                 new_counter += 1
+            end
+
+            if rxn_mech == "UNIUNI"
+                @test length(rcts) == 1 && length(prds) == 1
+                @test length(cat) == 1
+            elseif rxn_mech == "BIUNI"
+                @test length(rcts) == 2 && length(prds) == 1
+                @test length(cat) == 0
+            elseif rxn_mech == "UNIBI"
+                @test length(rcts) == 1 && length(prds) == 2
+                @test length(cat) == 0
+            elseif rxn_mech == "BIBI"
+                @test length(rcts) == 2 && length(prds) == 2
+                @test length(cat) == 0
+            else
+                error("invalid reaction mechanism type")
             end
         end
         @test length(species_present) == n_species
