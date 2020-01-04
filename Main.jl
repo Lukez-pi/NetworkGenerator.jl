@@ -9,7 +9,7 @@ for i = 1:1
     species = ["S$i" for i = 1:5]
     gene_species = species[1:2]
     rxn_specs = NetworkGenerator.randomize_rxns(species, gene_species, nRxns)
-    NetworkGenerator.print_dict(rxn_specs)
+    #NetworkGenerator.print_dict(rxn_specs)
 
     add_rxns, variables = NetworkGenerator.generate_model(rxn_specs, elementary_rxns)
 
@@ -71,7 +71,7 @@ for i = 1:1
     rxn_specs_old = rxn_specs
     mutate_num = 2
     rxn_specs_mut = NetworkGenerator.replace_rxn(rxn_specs_old, mutate_num, species, gene_species, nRxns)[1]
-    NetworkGenerator.print_dict(rxn_specs_mut)
+    #NetworkGenerator.print_dict(rxn_specs_mut)
     add_rxns, variables = NetworkGenerator.generate_model(rxn_specs_mut, true)
 
     sbmlFile = "minimal.xml"
